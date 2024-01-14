@@ -3,10 +3,21 @@ Prasi Thapa
 
 """
 
+import pygame
+import random
 import math
 import time
 from player import HumanPlayer, RandomComputerPlayer, SmartComputerPlayer
 
+# Constants
+WIDTH = 600
+HEIGHT = 600
+BG_COLOR = (28, 170, 156)
+
+# Initialize Pygame
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption('Tic Tac Toe')
 
 class TicTacToe():
     def __init__(self):
@@ -68,40 +79,62 @@ class TicTacToe():
     def available_moves(self):
         return [i for i, x in enumerate(self.board) if x == " "]
 
+def draw_board(board):
+    screen.fill(BG_COLOR)
+    for row in range(3):
+        for col in range(3):
+            square = pygame.Rect(col * (WIDTH // 3), row * (HEIGHT // 3), WIDTH // 3, HEIGHT // 3)
+            pygame.draw.rect(screen, (255, 255, 255), square, 3)
+            if board[row * 3 + col] == 'X':
+                pygame.draw.line(screen, (255, 255, 255), square.topleft, square.bottomright, 3)
+                pygame.draw.line(screen, (255, 255, 255), square.bottomleft, square.topright, 3)
+            elif board[row * 3 + col] == 'O':
+                pygame.draw.circle(screen, (255, 255, 255), square.center, WIDTH // 6, 3)
 
 def play(game, x_player, o_player, print_game=True):
-
     if print_game:
         game.print_board_nums()
 
     letter = 'X'
+    pygame.init()
+    clock = pygame.time.Clock()
+
     while game.empty_squares():
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+        draw_board(game.board)
+        pygame.display.update()
+
         if letter == 'O':
             square = o_player.get_move(game)
         else:
             square = x_player.get_move(game)
-        if game.make_move(square, letter):
 
-            if print_game:
-                print(letter + ' makes a move to square {}'.format(square))
-                game.print_board()
-                print('')
+        if game.make_move(square, letter):
+            draw_board(game.board)
+            pygame.display.update()
 
             if game.current_winner:
                 if print_game:
                     print(letter + ' wins!')
                 return letter  # ends the loop and exits the game
+
             letter = 'O' if letter == 'X' else 'X'  # switches player
 
-        time.sleep(.8)
+        time.sleep(0.8)
+        clock.tick(30)  # Limit the frame rate to 30 FPS
 
     if print_game:
         print('It\'s a tie!')
 
-
-
 if __name__ == '__main__':
-    x_player = SmartComputerPlayer('X')
-    o_player = HumanPlayer('O')
+    players = [HumanPlayer('X'), SmartComputerPlayer('O')]  # List of players
+    random.shuffle(players)  # Shuffle the list to randomize the order
+    x_player, o_player = players  # Assign the first and second players
     t = TicTacToe()
-    play(t, x_player, o_player, print_game=True)
+    play(t, x_player, o_player)
+    pygame.quit()
+    quit()
